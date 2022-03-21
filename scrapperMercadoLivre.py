@@ -1,20 +1,12 @@
+from item import Item
 from bs4 import BeautifulSoup
 import requests
 
-class Item:
-    def __init__(self, name, description, price, currency, websiteOrigin, url):
-        self.name = name
-        self.description = description
-        self.price = price
-        self.currency = currency
-        self.websiteOrigin = websiteOrigin
-        self.url = url
 
 def GetDescription(url) :
     productHtml = requests.get(url).text
     productPage = BeautifulSoup(productHtml)
     return productPage.find("p", attrs={"class" : "ui-pdp-description__content"}).text
-    
 
 htmlPage = requests.get("https://www.mercadolivre.com.br/categorias#menu=categories").text
 soup = BeautifulSoup(htmlPage)
