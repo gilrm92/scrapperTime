@@ -1,14 +1,13 @@
 from item import Item
 from bs4 import BeautifulSoup
-import requests
-
+import requestService
 
 def GetDescription(url) :
-    productHtml = requests.get(url).text
+    productHtml = requestService.get(url).text
     productPage = BeautifulSoup(productHtml)
     return productPage.find("p", attrs={"class" : "ui-pdp-description__content"}).text
 
-htmlPage = requests.get("https://www.mercadolivre.com.br/categorias#menu=categories").text
+htmlPage = requestService.get("https://www.mercadolivre.com.br/categorias#menu=categories").text
 soup = BeautifulSoup(htmlPage)
 categories = soup.find_all(attrs={"itemprop" : "url"})
 allItems = []
@@ -16,7 +15,7 @@ allItems = []
 for category in categories:
     print("starting category " + category["href"])
     categoryUrl = category["href"]
-    categoryHtml = requests.get(categoryUrl).text
+    categoryHtml = requestService.get(categoryUrl).text
     categorySoup = BeautifulSoup(categoryHtml)
     items = categorySoup.find_all(attrs={"class" : "ui-search-result__wrapper"})
     for item in items:
