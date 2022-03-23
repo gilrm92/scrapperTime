@@ -1,20 +1,44 @@
 from itertools import cycle
+import threading
 import requests
-from proxyService import getProxies
+import random
+import concurrent.futures
+from dbManager import getProxies
 
-proxies = getProxies()
+def refreshProxies() :
+    threading.Timer(60.0, refreshProxies).start()
+    global proxies 
+    proxies = list(getProxies())
+
+refreshProxies()
+
+def requestUrl(url, proxy):
+    try:
+        #print("Request using proxy " + proxy["ip"])
+        response = requests.get(url, timeout=5, proxies={"http": proxy["ip"], "https": proxy["ip"]})
+        return response
+
+    except:
+        pass
+        #print("Couln't connect to: " + proxy)
 
 def get(url):
-    
-    for proxy in proxies:
-        print("Request using proxy " +  proxy)
-    
-        try:
-            response = requests.get(url, proxies={"http": proxy, "https": proxy})
-            return response
-    
-        except:
-            print("Couln't connect to: " + proxy)
-            
-        
-        
+    data = None
+    while data is None:
+        random.shuffle(proxies)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=300) as executor:    
+            future_request = {executor.submit(requestUrl, url, proxy): proxy for proxy in proxies}
+
+            for future in concurrent.futures.as_completed(future_request):
+                request = future_request[future]
+            try:
+                data = future.result()
+                if data is not None:
+                    if "nav-logo" in data.text:
+                        return data.text
+                    else:
+                        raise Exception("website blocked IP")    
+                else :
+                    raise Exception("website returned none")    
+            except Exception as exc:
+                print('%r generated an exception: %s' % (request, exc))        

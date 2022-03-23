@@ -2,9 +2,9 @@ from lxml.html import fromstring
  
  
 def getProxies():
-    file = open("proxy-filtered-list.txt")
-    proxies = set() 
+    file = open("proxy-list.txt")
+    proxies = []
     for line in file:
-        proxies.add(line.replace("\n", ""))
+        proxies.append(line.replace("\n", ""))
             
     return proxies

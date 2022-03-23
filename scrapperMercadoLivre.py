@@ -1,38 +1,47 @@
 from item import Item
 from bs4 import BeautifulSoup
 import requestService
+import dbManager
 
 def GetDescription(url) :
-    productHtml = requestService.get(url).text
+    productHtml = requestService.get(url)
+    if productHtml is None :
+        return ""
+    
     productPage = BeautifulSoup(productHtml)
-    return productPage.find("p", attrs={"class" : "ui-pdp-description__content"}).text
+    description = productPage.find("p", attrs={"class" : "ui-pdp-description__content"})
+    if description is None :
+        return ""
+    
+    return description.text
 
-htmlPage = requestService.get("https://www.mercadolivre.com.br/categorias#menu=categories").text
+htmlPage = requestService.get("https://www.mercadolivre.com.br/categorias#menu=categories")
 soup = BeautifulSoup(htmlPage)
-categories = soup.find_all(attrs={"itemprop" : "url"})
+categories = soup.find_all("a", attrs={"class" : "categories__subtitle"})
 allItems = []
 
 for category in categories:
     print("starting category " + category["href"])
     categoryUrl = category["href"]
-    categoryHtml = requestService.get(categoryUrl).text
+    categoryHtml = requestService.get(categoryUrl)
+
+    if categoryHtml is None :
+        continue
+    
     categorySoup = BeautifulSoup(categoryHtml)
     items = categorySoup.find_all(attrs={"class" : "ui-search-result__wrapper"})
     for item in items:
-        
-        name = item.find(attrs={"class" : "ui-search-link"})["title"]
         url = item.find(attrs={"class" : "ui-search-link"})["href"]
-        description = GetDescription(url)
-        priceDiv = item.find("div", attrs={"class" : "ui-search-price__second-line"})
-        price = priceDiv.find(attrs={"class":"price-tag-fraction"}).text
-        currency = priceDiv.find(attrs={"class":"price-tag-symbol"}).text
-        websiteOrigin = "Mercado Livre"
-        
-        newItem = Item(name, description, price, currency, websiteOrigin, url)
-        print("new item " + name + " created")    
-        allItems.append(newItem)
-
-print(allItems)
+        if not dbManager.existsInDb(url) :
+            name = item.find(attrs={"class" : "ui-search-link"})["title"]
+            description = GetDescription(url)
+            priceDiv = item.find("div", attrs={"class" : "ui-search-price__second-line"})
+            price = priceDiv.find(attrs={"class":"price-tag-fraction"}).text
+            currency = priceDiv.find(attrs={"class":"price-tag-symbol"}).text
+            websiteOrigin = "Mercado Livre"
+            newItem = Item(name, description, price, currency, websiteOrigin, url)
+            print("new item " + name + " created")
+            dbManager.saveItem(newItem)       
         
     
     
