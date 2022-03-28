@@ -14,13 +14,13 @@ refreshProxies()
 
 def requestUrl(url, proxy):
     try:
-        #print("Request using proxy " + proxy["ip"])
-        response = requests.get(url, timeout=5, proxies={"http": proxy["ip"], "https": proxy["ip"]})
+        #print("requesting with proxy " + proxy["ip"])
+        response = requests.get(url, timeout=10, proxies={"http": proxy["ip"], "https": proxy["ip"]})
         return response
 
     except:
+        #print("failed proxy " + proxy["ip"])
         pass
-        #print("Couln't connect to: " + proxy)
 
 def get(url):
     data = None
